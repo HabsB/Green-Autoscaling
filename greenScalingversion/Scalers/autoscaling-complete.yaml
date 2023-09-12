@@ -1,0 +1,134 @@
+# ---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: carts-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: carts
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50"  
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: catalogue-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: catalogue
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50"   
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: front-end-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: front-end
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50"    
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: orders-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: orders
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50"  
+ 
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: payment-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: payment
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50" 
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: queue-master-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: queue-master
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50" 
+    
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: shipping-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: shipping
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50" 
+    
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: user-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: user
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50" 
+    
