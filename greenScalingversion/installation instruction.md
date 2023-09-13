@@ -1075,7 +1075,7 @@ spec:
       databaseIndex: "0"
 EOF
 # wait a few seconds and note the number of replicas that are ready now
-kubectl get deploy word-processor -w
+kubectl get hpa -w -n sock-shop-g
 ```
 
 ## Install Carbon Intensity Exporter Operator
@@ -1097,10 +1097,6 @@ Using Helm, install the Carbon Intensity Exporter Operator into the AKS cluster.
 ```bash
 export WATTTIME_USERNAME="DanB" 
 export WATTTIME_PASSWORD="aj)NwBf~IbF+"
-export REGION=westus
-
-export WATTTIME_USERNAME=HabenB 
-export WATTTIME_PASSWORD=Haben@717
 export REGION=westus
 
 helm install carbon-intensity-exporter \
@@ -1131,10 +1127,149 @@ You can view the carbon intensity values with the following command.
 # get carbon intensity binary data
 kubectl get cm -n kube-system carbon-intensity -o jsonpath='{.binaryData.data}' | base64 --decode | jq
 ```
+## Install Scaler Definition
+```bash
+kubectl apply -f - <<EOF
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: carts-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: carts
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50"  
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: catalogue-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: catalogue
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50"   
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: front-end-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: front-end
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50"    
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: orders-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: orders
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50"  
+ 
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: payment-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: payment
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50" 
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: queue-master-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: queue-master
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50" 
+    
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: shipping-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: shipping
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50" 
+    
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: user-scaler
+  namespace: sock-shop-g
+spec:
+  scaleTargetRef:
+    name: user
+  minReplicaCount: 1
+  maxReplicaCount: 10  
+  triggers:
+  - type: cpu
+    metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
+    metadata:
+      value: "50" 
+
+EOF
+```
 
 ## Install Carbon Aware KEDA Operator
 
-Currently KEDA is scaling your workload as needed and will scale up to a maximum of 100 replicas (KEDA's default) if needed. We will now add carbon awareness to it, so that it's maximum replicas is capped based on carbon intensity.
+
+Currently KEDA is scaling your workload as needed and will scale up to a maximum of 10 replicas (KEDA's default) if needed. We will now add carbon awareness to it, so that it's maximum replicas is capped based on carbon intensity.
 
 Install the latest version of the operator.
 
