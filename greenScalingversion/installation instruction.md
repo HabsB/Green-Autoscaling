@@ -1,11 +1,5 @@
 # Install with Azure Kubernetes Service
 
-## Video walkthrough
-
-Click the thumbnail below to watch a walkthough of setting the operator up on AKS.
-
-[![Video walkthrough of installing and testing carbon aware keda operator](https://img.youtube.com/vi/0aamt2DrwKo/0.jpg)](https://www.youtube.com/watch?v=0aamt2DrwKo)
-
 ## Prerequisites
 
 * An Azure Subscription (e.g. [Free](https://aka.ms/azure-free-account) or [Student](https://aka.ms/azure-student-account) account)
