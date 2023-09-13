@@ -1035,101 +1035,9 @@ EOF
 kubectl get hpa -w -n sock-shop-g
 ```
 
-Finally, scale the `word-processor` app using KEDA's Redis trigger.
+Finally, scale the `different sock-shop microservices` app using KEDA's CPU trigger.
 
 ```bash
-kubectl apply -f - <<EOF 
-apiVersion: keda.sh/v1alpha1 
-kind: ScaledObject 
-metadata: 
-  name: word-processor-scaler
-spec: 
-  scaleTargetRef: 
-    apiVersion: apps/v1                             # Optional. Default: apps/v1 
-    kind: deployment                                # Optional. Default: Deployment 
-    name: word-processor                            # Mandatory. Must be in the same namespace as the ScaledObject 
-    envSourceContainerName: word-processor          # Optional. Default: .spec.template.spec.containers[0] 
-  pollingInterval: 30                               # Optional. Default: 30 seconds 
-  cooldownPeriod:  120                              # Optional. Default: 300 seconds 
-  minReplicaCount: 0                                # Optional. Default: 0 
-  maxReplicaCount: 100                              # Optional. Default: 100 
-  advanced:                                         # Optional. Section to specify advanced options 
-    restoreToOriginalReplicaCount: false            # Optional. Default: false 
-    horizontalPodAutoscalerConfig:                  # Optional. Section to specify HPA related options 
-      behavior:                                     # Optional. Use to modify HPA's scaling behavior 
-        scaleDown: 
-          stabilizationWindowSeconds: 300 
-          policies: 
-          - type: Percent 
-            value: 100 
-            periodSeconds: 15 
-  triggers: 
-  - type: redis 
-    metadata:
-      hostFromEnv: REDIS_HOST 
-      portFromEnv: REDIS_PORT
-      passwordFromEnv: REDIS_KEY 
-      listName: words 
-      listLength: "500"
-      enableTLS: "false"
-      databaseIndex: "0"
-EOF
-
-```
-
-## Install Carbon Intensity Exporter Operator
-
-To test with real data from the Carbon Aware SDK, head over to this [repo](https://github.com/Azure/kubernetes-carbon-intensity-exporter/) and follow the instructions in the [README.md](https://github.com/Azure/kubernetes-carbon-intensity-exporter/blob/main/README.md) to install the operator into the AKS cluster.
-
-> IMPORTANT: You must have WattTime API credentials to use this operator
-
-If you do not have WattTime API credentials you can skip this step and still test this operator using mock carbon intensity data
-
-```bash
-cd /tmp
-git clone https://github.com/Azure/kubernetes-carbon-intensity-exporter.git
-cd kubernetes-carbon-intensity-exporter
-```
-# wait a few seconds and note the number of replicas that are ready now
-kubectl get hpa -w -n sock-shop-g
-Using Helm, install the Carbon Intensity Exporter Operator into the AKS cluster.
-
-```bash
-export WATTTIME_USERNAME="DanB" 
-export WATTTIME_PASSWORD="aj)NwBf~IbF+"
-export REGION=westus
-
-helm install carbon-intensity-exporter \
-  --set carbonDataExporter.region=$LOCATION \
-  --set apiServer.username=$WATTTIME_USERNAME \
-  --set apiServer.password=$WATTTIME_PASSWORD \
-  ./charts/carbon-intensity-exporter
-
-
-
-# go back to repo directory
-cd /workspaces/carbon-aware-keda-operator
-```
-
-Verify carbon intensity data is in place.
-
-```bash
-# ensure the status of the carbon intensity exporter operator pod is running
-kubectl get po -n kube-system -l app.kubernetes.io/name=carbon-intensity-exporter
-
-# get configmap data
-kubectl get cm -n kube-system carbon-intensity -o jsonpath='{.data}' | jq
-```
-
-You can view the carbon intensity values with the following command.
-
-```bash
-# get carbon intensity binary data
-kubectl get cm -n kube-system carbon-intensity -o jsonpath='{.binaryData.data}' | base64 --decode | jq
-```
-## Install Scaler Definition
-```bash
-kubectl apply -f - <<EOF
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -1262,8 +1170,59 @@ spec:
     metricType: Utilization # Allowed types are 'Utilization' or 'AverageValue'
     metadata:
       value: "50" 
-
 EOF
+
+```
+
+## Install Carbon Intensity Exporter Operator
+
+To test with real data from the Carbon Aware SDK, head over to this [repo](https://github.com/Azure/kubernetes-carbon-intensity-exporter/) and follow the instructions in the [README.md](https://github.com/Azure/kubernetes-carbon-intensity-exporter/blob/main/README.md) to install the operator into the AKS cluster.
+
+> IMPORTANT: You must have WattTime API credentials to use this operator
+
+If you do not have WattTime API credentials you can skip this step and still test this operator using mock carbon intensity data
+
+```bash
+cd /tmp
+git clone https://github.com/Azure/kubernetes-carbon-intensity-exporter.git
+cd kubernetes-carbon-intensity-exporter
+```
+# wait a few seconds and note the number of replicas that are ready now
+kubectl get hpa -w -n sock-shop-g
+Using Helm, install the Carbon Intensity Exporter Operator into the AKS cluster.
+
+```bash
+export WATTTIME_USERNAME="DanB" 
+export WATTTIME_PASSWORD="aj)NwBf~IbF+"
+export REGION=westus
+
+helm install carbon-intensity-exporter \
+  --set carbonDataExporter.region=$LOCATION \
+  --set apiServer.username=$WATTTIME_USERNAME \
+  --set apiServer.password=$WATTTIME_PASSWORD \
+  ./charts/carbon-intensity-exporter
+
+
+
+# go back to repo directory
+cd /workspaces/carbon-aware-keda-operator
+```
+
+Verify carbon intensity data is in place.
+
+```bash
+# ensure the status of the carbon intensity exporter operator pod is running
+kubectl get po -n kube-system -l app.kubernetes.io/name=carbon-intensity-exporter
+
+# get configmap data
+kubectl get cm -n kube-system carbon-intensity -o jsonpath='{.data}' | jq
+```
+
+You can view the carbon intensity values with the following command.
+
+```bash
+# get carbon intensity binary data
+kubectl get cm -n kube-system carbon-intensity -o jsonpath='{.binaryData.data}' | base64 --decode | jq
 ```
 
 ## Install Carbon Aware KEDA Operator
@@ -1293,12 +1252,12 @@ metadata:
     app.kubernetes.io/part-of: carbon-aware-keda-operator 
     app.kubernetes.io/managed-by: kustomize 
     app.kubernetes.io/created-by: carbon-aware-keda-operator 
-  name: carbon-aware-word-processor-scaler
+  name: carbon-aware-carts-scaler
 spec: 
   kedaTarget: scaledobjects.keda.sh 
   kedaTargetRef: 
-    name: word-processor-scaler
-    namespace: default 
+    name: carts-scaler
+    namespace: sock-shop-g 
   carbonIntensityForecastDataSource:       # carbon intensity forecast data source 
     mockCarbonForecast: false              # [OPTIONAL] use mock carbon forecast data 
     localConfigMap:                        # [OPTIONAL] use configmap for carbon forecast data 
@@ -1306,22 +1265,301 @@ spec:
       namespace: kube-system
       key: data 
   maxReplicasByCarbonIntensity:            # array of carbon intensity values in ascending order; each threshold value represents the upper limit and previous entry represents lower limit 
-    - carbonIntensityThreshold: 200        # when carbon intensity is 437 or below 
-      maxReplicas: 110                     # do more 
-    - carbonIntensityThreshold: 260        # when carbon intensity is >437 and <=504 
-      maxReplicas: 60 
-    - carbonIntensityThreshold: 400        # when carbon intensity is >504 and <=571 (and beyond) 
-      maxReplicas: 10                      # do less 
+    - carbonIntensityThreshold: 200        # when carbon intensity is 200 or below 
+      maxReplicas: 10                     # do more 
+    - carbonIntensityThreshold: 310        # when carbon intensity is >200 and <=310 
+      maxReplicas: 8 
+    - carbonIntensityThreshold: 400        # when carbon intensity is >310 and <=400 (and beyond) 
+      maxReplicas: 4                      # do less 
   ecoModeOff:                              # [OPTIONAL] settings to override carbon awareness; can override based on high intensity duration or schedules 
-    maxReplicas: 100                       # when carbon awareness is disabled, use this value 
+    maxReplicas: 10                       # when carbon awareness is disabled, use this value 
     carbonIntensityDuration:               # [OPTIONAL] disable carbon awareness when carbon intensity is high for this length of time 
-      carbonIntensityThreshold: 555        # when carbon intensity is equal to or above this value, consider it high 
+      carbonIntensityThreshold: 450        # when carbon intensity is equal to or above this value, consider it high 
       overrideEcoAfterDurationInMins: 45   # if carbon intensity is high for this many hours disable ecomode 
     customSchedule:                        # [OPTIONAL] disable carbon awareness during specified time periods 
       - startTime: "2023-04-28T16:45:00Z"  # start time in UTC 
         endTime: "2023-04-28T17:00:59Z"    # end time in UTC 
     recurringSchedule:                     # [OPTIONAL] disable carbon awareness during specified recurring time periods 
-      - "* 23 * * 1-5"                     # disable every weekday from 11pm to 12am UTC 
+      - "* 23 * * 1-5"                     # disable every weekday from 11pm to 12am UTC
+
+---
+apiVersion: carbonaware.kubernetes.azure.com/v1alpha1 
+kind: CarbonAwareKedaScaler 
+metadata: 
+  labels: 
+    app.kubernetes.io/name: carbonawarekedascaler 
+    app.kubernetes.io/instance: carbonawarekedascaler-sample 
+    app.kubernetes.io/part-of: carbon-aware-keda-operator 
+    app.kubernetes.io/managed-by: kustomize 
+    app.kubernetes.io/created-by: carbon-aware-keda-operator 
+  name: carbon-aware-catalogue-scaler
+spec: 
+  kedaTarget: scaledobjects.keda.sh 
+  kedaTargetRef: 
+    name: catalogue-scaler
+    namespace: sock-shop-g 
+  carbonIntensityForecastDataSource:       # carbon intensity forecast data source 
+    mockCarbonForecast: false              # [OPTIONAL] use mock carbon forecast data 
+    localConfigMap:                        # [OPTIONAL] use configmap for carbon forecast data 
+      name: carbon-intensity 
+      namespace: kube-system
+      key: data 
+  maxReplicasByCarbonIntensity:            # array of carbon intensity values in ascending order; each threshold value represents the upper limit and previous entry represents lower limit 
+    - carbonIntensityThreshold: 200        # when carbon intensity is 200 or below 
+      maxReplicas: 10                     # do more 
+    - carbonIntensityThreshold: 310        # when carbon intensity is >200 and <=310 
+      maxReplicas: 8 
+    - carbonIntensityThreshold: 400        # when carbon intensity is >310 and <=400 (and beyond) 
+      maxReplicas: 4                      # do less 
+  ecoModeOff:                              # [OPTIONAL] settings to override carbon awareness; can override based on high intensity duration or schedules 
+    maxReplicas: 10                       # when carbon awareness is disabled, use this value 
+    carbonIntensityDuration:               # [OPTIONAL] disable carbon awareness when carbon intensity is high for this length of time 
+      carbonIntensityThreshold: 450        # when carbon intensity is equal to or above this value, consider it high 
+      overrideEcoAfterDurationInMins: 45   # if carbon intensity is high for this many hours disable ecomode 
+    customSchedule:                        # [OPTIONAL] disable carbon awareness during specified time periods 
+      - startTime: "2023-04-28T16:45:00Z"  # start time in UTC 
+        endTime: "2023-04-28T17:00:59Z"    # end time in UTC 
+    recurringSchedule:                     # [OPTIONAL] disable carbon awareness during specified recurring time periods 
+      - "* 23 * * 1-5"                     # disable every weekday from 11pm to 12am UTC      
+
+---
+apiVersion: carbonaware.kubernetes.azure.com/v1alpha1 
+kind: CarbonAwareKedaScaler 
+metadata: 
+  labels: 
+    app.kubernetes.io/name: carbonawarekedascaler 
+    app.kubernetes.io/instance: carbonawarekedascaler-sample 
+    app.kubernetes.io/part-of: carbon-aware-keda-operator 
+    app.kubernetes.io/managed-by: kustomize 
+    app.kubernetes.io/created-by: carbon-aware-keda-operator 
+  name: carbon-aware-front-end-scaler
+spec: 
+  kedaTarget: scaledobjects.keda.sh 
+  kedaTargetRef: 
+    name: front-end-scaler
+    namespace: sock-shop-g 
+  carbonIntensityForecastDataSource:       # carbon intensity forecast data source 
+    mockCarbonForecast: false              # [OPTIONAL] use mock carbon forecast data 
+    localConfigMap:                        # [OPTIONAL] use configmap for carbon forecast data 
+      name: carbon-intensity 
+      namespace: kube-system
+      key: data 
+  maxReplicasByCarbonIntensity:            # array of carbon intensity values in ascending order; each threshold value represents the upper limit and previous entry represents lower limit 
+    - carbonIntensityThreshold: 200        # when carbon intensity is 200 or below 
+      maxReplicas: 10                     # do more 
+    - carbonIntensityThreshold: 310        # when carbon intensity is >200 and <=310 
+      maxReplicas: 8 
+    - carbonIntensityThreshold: 400        # when carbon intensity is >310 and <=400 (and beyond) 
+      maxReplicas: 4                      # do less 
+  ecoModeOff:                              # [OPTIONAL] settings to override carbon awareness; can override based on high intensity duration or schedules 
+    maxReplicas: 10                       # when carbon awareness is disabled, use this value 
+    carbonIntensityDuration:               # [OPTIONAL] disable carbon awareness when carbon intensity is high for this length of time 
+      carbonIntensityThreshold: 450        # when carbon intensity is equal to or above this value, consider it high 
+      overrideEcoAfterDurationInMins: 45   # if carbon intensity is high for this many hours disable ecomode 
+    customSchedule:                        # [OPTIONAL] disable carbon awareness during specified time periods 
+      - startTime: "2023-04-28T16:45:00Z"  # start time in UTC 
+        endTime: "2023-04-28T17:00:59Z"    # end time in UTC 
+    recurringSchedule:                     # [OPTIONAL] disable carbon awareness during specified recurring time periods 
+      - "* 23 * * 1-5"                     # disable every weekday from 11pm to 12am UTC  
+---
+apiVersion: carbonaware.kubernetes.azure.com/v1alpha1 
+kind: CarbonAwareKedaScaler 
+metadata: 
+  labels: 
+    app.kubernetes.io/name: carbonawarekedascaler 
+    app.kubernetes.io/instance: carbonawarekedascaler-sample 
+    app.kubernetes.io/part-of: carbon-aware-keda-operator 
+    app.kubernetes.io/managed-by: kustomize 
+    app.kubernetes.io/created-by: carbon-aware-keda-operator 
+  name: carbon-aware-payment-scaler
+spec: 
+  kedaTarget: scaledobjects.keda.sh 
+  kedaTargetRef: 
+    name: payment-scaler
+    namespace: sock-shop-g 
+  carbonIntensityForecastDataSource:       # carbon intensity forecast data source 
+    mockCarbonForecast: false              # [OPTIONAL] use mock carbon forecast data 
+    localConfigMap:                        # [OPTIONAL] use configmap for carbon forecast data 
+      name: carbon-intensity 
+      namespace: kube-system
+      key: data 
+  maxReplicasByCarbonIntensity:            # array of carbon intensity values in ascending order; each threshold value represents the upper limit and previous entry represents lower limit 
+    - carbonIntensityThreshold: 200        # when carbon intensity is 200 or below 
+      maxReplicas: 10                     # do more 
+    - carbonIntensityThreshold: 310        # when carbon intensity is >200 and <=310 
+      maxReplicas: 8 
+    - carbonIntensityThreshold: 400        # when carbon intensity is >310 and <=400 (and beyond) 
+      maxReplicas: 4                       # do less 
+  ecoModeOff:                              # [OPTIONAL] settings to override carbon awareness; can override based on high intensity duration or schedules 
+    maxReplicas: 10                       # when carbon awareness is disabled, use this value 
+    carbonIntensityDuration:               # [OPTIONAL] disable carbon awareness when carbon intensity is high for this length of time 
+      carbonIntensityThreshold: 450        # when carbon intensity is equal to or above this value, consider it high 
+      overrideEcoAfterDurationInMins: 45   # if carbon intensity is high for this many hours disable ecomode 
+    customSchedule:                        # [OPTIONAL] disable carbon awareness during specified time periods 
+      - startTime: "2023-04-28T16:45:00Z"  # start time in UTC 
+        endTime: "2023-04-28T17:00:59Z"    # end time in UTC 
+    recurringSchedule:                     # [OPTIONAL] disable carbon awareness during specified recurring time periods 
+      - "* 23 * * 1-5"                     # disable every weekday from 11pm to 12am UTC      
+
+---
+apiVersion: carbonaware.kubernetes.azure.com/v1alpha1 
+kind: CarbonAwareKedaScaler 
+metadata: 
+  labels: 
+    app.kubernetes.io/name: carbonawarekedascaler 
+    app.kubernetes.io/instance: carbonawarekedascaler-sample 
+    app.kubernetes.io/part-of: carbon-aware-keda-operator 
+    app.kubernetes.io/managed-by: kustomize 
+    app.kubernetes.io/created-by: carbon-aware-keda-operator 
+  name: carbon-aware-queue-master-scaler
+spec: 
+  kedaTarget: scaledobjects.keda.sh 
+  kedaTargetRef: 
+    name: queue-master-scaler
+    namespace: sock-shop-g 
+  carbonIntensityForecastDataSource:       # carbon intensity forecast data source 
+    mockCarbonForecast: false              # [OPTIONAL] use mock carbon forecast data 
+    localConfigMap:                        # [OPTIONAL] use configmap for carbon forecast data 
+      name: carbon-intensity 
+      namespace: kube-system
+      key: data 
+  maxReplicasByCarbonIntensity:            # array of carbon intensity values in ascending order; each threshold value represents the upper limit and previous entry represents lower limit 
+    - carbonIntensityThreshold: 200        # when carbon intensity is 200 or below 
+      maxReplicas: 10                     # do more 
+    - carbonIntensityThreshold: 310        # when carbon intensity is >200 and <=310 
+      maxReplicas: 8 
+    - carbonIntensityThreshold: 400        # when carbon intensity is >310 and <=400 (and beyond) 
+      maxReplicas: 4                     # do less 
+  ecoModeOff:                              # [OPTIONAL] settings to override carbon awareness; can override based on high intensity duration or schedules 
+    maxReplicas: 10                       # when carbon awareness is disabled, use this value 
+    carbonIntensityDuration:               # [OPTIONAL] disable carbon awareness when carbon intensity is high for this length of time 
+      carbonIntensityThreshold: 450        # when carbon intensity is equal to or above this value, consider it high 
+      overrideEcoAfterDurationInMins: 45   # if carbon intensity is high for this many hours disable ecomode 
+    customSchedule:                        # [OPTIONAL] disable carbon awareness during specified time periods 
+      - startTime: "2023-04-28T16:45:00Z"  # start time in UTC 
+        endTime: "2023-04-28T17:00:59Z"    # end time in UTC 
+    recurringSchedule:                     # [OPTIONAL] disable carbon awareness during specified recurring time periods 
+      - "* 23 * * 1-5"                     # disable every weekday from 11pm to 12am UTC      
+
+---
+apiVersion: carbonaware.kubernetes.azure.com/v1alpha1 
+kind: CarbonAwareKedaScaler 
+metadata: 
+  labels: 
+    app.kubernetes.io/name: carbonawarekedascaler 
+    app.kubernetes.io/instance: carbonawarekedascaler-sample 
+    app.kubernetes.io/part-of: carbon-aware-keda-operator 
+    app.kubernetes.io/managed-by: kustomize 
+    app.kubernetes.io/created-by: carbon-aware-keda-operator 
+  name: carbon-aware-shipping-scaler
+spec: 
+  kedaTarget: scaledobjects.keda.sh 
+  kedaTargetRef: 
+    name: shipping-scaler
+    namespace: sock-shop-g 
+  carbonIntensityForecastDataSource:       # carbon intensity forecast data source 
+    mockCarbonForecast: false              # [OPTIONAL] use mock carbon forecast data 
+    localConfigMap:                        # [OPTIONAL] use configmap for carbon forecast data 
+      name: carbon-intensity 
+      namespace: kube-system
+      key: data 
+  maxReplicasByCarbonIntensity:            # array of carbon intensity values in ascending order; each threshold value represents the upper limit and previous entry represents lower limit 
+    - carbonIntensityThreshold: 200        # when carbon intensity is 200 or below 
+      maxReplicas: 10                     # do more 
+    - carbonIntensityThreshold: 310        # when carbon intensity is >200 and <=310 
+      maxReplicas: 8 
+    - carbonIntensityThreshold: 400        # when carbon intensity is >310 and <=400 (and beyond) 
+      maxReplicas: 4                     # do less 
+  ecoModeOff:                              # [OPTIONAL] settings to override carbon awareness; can override based on high intensity duration or schedules 
+    maxReplicas: 10                       # when carbon awareness is disabled, use this value 
+    carbonIntensityDuration:               # [OPTIONAL] disable carbon awareness when carbon intensity is high for this length of time 
+      carbonIntensityThreshold: 450        # when carbon intensity is equal to or above this value, consider it high 
+      overrideEcoAfterDurationInMins: 45   # if carbon intensity is high for this many hours disable ecomode 
+    customSchedule:                        # [OPTIONAL] disable carbon awareness during specified time periods 
+      - startTime: "2023-04-28T16:45:00Z"  # start time in UTC 
+        endTime: "2023-04-28T17:00:59Z"    # end time in UTC 
+    recurringSchedule:                     # [OPTIONAL] disable carbon awareness during specified recurring time periods 
+      - "* 23 * * 1-5"                     # disable every weekday from 11pm to 12am UTC      
+
+---
+apiVersion: carbonaware.kubernetes.azure.com/v1alpha1 
+kind: CarbonAwareKedaScaler 
+metadata: 
+  labels: 
+    app.kubernetes.io/name: carbonawarekedascaler 
+    app.kubernetes.io/instance: carbonawarekedascaler-sample 
+    app.kubernetes.io/part-of: carbon-aware-keda-operator 
+    app.kubernetes.io/managed-by: kustomize 
+    app.kubernetes.io/created-by: carbon-aware-keda-operator 
+  name: carbon-aware-user-scaler
+spec: 
+  kedaTarget: scaledobjects.keda.sh 
+  kedaTargetRef: 
+    name: user-scaler
+    namespace: sock-shop-g 
+  carbonIntensityForecastDataSource:       # carbon intensity forecast data source 
+    mockCarbonForecast: false              # [OPTIONAL] use mock carbon forecast data 
+    localConfigMap:                        # [OPTIONAL] use configmap for carbon forecast data 
+      name: carbon-intensity 
+      namespace: kube-system
+      key: data 
+  maxReplicasByCarbonIntensity:            # array of carbon intensity values in ascending order; each threshold value represents the upper limit and previous entry represents lower limit 
+    - carbonIntensityThreshold: 200        # when carbon intensity is 200 or below 
+      maxReplicas: 10                     # do more 
+    - carbonIntensityThreshold: 310        # when carbon intensity is >200 and <=310 
+      maxReplicas: 8 
+    - carbonIntensityThreshold: 400        # when carbon intensity is >310 and <=400 (and beyond) 
+      maxReplicas: 4                     # do less 
+  ecoModeOff:                              # [OPTIONAL] settings to override carbon awareness; can override based on high intensity duration or schedules 
+    maxReplicas: 10                       # when carbon awareness is disabled, use this value 
+    carbonIntensityDuration:               # [OPTIONAL] disable carbon awareness when carbon intensity is high for this length of time 
+      carbonIntensityThreshold: 450        # when carbon intensity is equal to or above this value, consider it high 
+      overrideEcoAfterDurationInMins: 45   # if carbon intensity is high for this many hours disable ecomode 
+    customSchedule:                        # [OPTIONAL] disable carbon awareness during specified time periods 
+      - startTime: "2023-04-28T16:45:00Z"  # start time in UTC 
+        endTime: "2023-04-28T17:00:59Z"    # end time in UTC 
+    recurringSchedule:                     # [OPTIONAL] disable carbon awareness during specified recurring time periods 
+      - "* 23 * * 1-5"                     # disable every weekday from 11pm to 12am UTC      
+
+---
+apiVersion: carbonaware.kubernetes.azure.com/v1alpha1 
+kind: CarbonAwareKedaScaler 
+metadata: 
+  labels: 
+    app.kubernetes.io/name: carbonawarekedascaler 
+    app.kubernetes.io/instance: carbonawarekedascaler-sample 
+    app.kubernetes.io/part-of: carbon-aware-keda-operator 
+    app.kubernetes.io/managed-by: kustomize 
+    app.kubernetes.io/created-by: carbon-aware-keda-operator 
+  name: carbon-aware-orders-scaler
+spec: 
+  kedaTarget: scaledobjects.keda.sh 
+  kedaTargetRef: 
+    name: orders-scaler
+    namespace: sock-shop-g 
+  carbonIntensityForecastDataSource:       # carbon intensity forecast data source 
+    mockCarbonForecast: false              # [OPTIONAL] use mock carbon forecast data 
+    localConfigMap:                        # [OPTIONAL] use configmap for carbon forecast data 
+      name: carbon-intensity 
+      namespace: kube-system
+      key: data 
+  maxReplicasByCarbonIntensity:            # array of carbon intensity values in ascending order; each threshold value represents the upper limit and previous entry represents lower limit 
+    - carbonIntensityThreshold: 200        # when carbon intensity is 200 or below 
+      maxReplicas: 10                     # do more 
+    - carbonIntensityThreshold: 310        # when carbon intensity is >200 and <=310 
+      maxReplicas: 8 
+    - carbonIntensityThreshold: 400        # when carbon intensity is >310 and <=400 (and beyond) 
+      maxReplicas: 4                     # do less 
+  ecoModeOff:                              # [OPTIONAL] settings to override carbon awareness; can override based on high intensity duration or schedules 
+    maxReplicas: 10                       # when carbon awareness is disabled, use this value 
+    carbonIntensityDuration:               # [OPTIONAL] disable carbon awareness when carbon intensity is high for this length of time 
+      carbonIntensityThreshold: 450        # when carbon intensity is equal to or above this value, consider it high 
+      overrideEcoAfterDurationInMins: 45   # if carbon intensity is high for this many hours disable ecomode 
+    customSchedule:                        # [OPTIONAL] disable carbon awareness during specified time periods 
+      - startTime: "2023-04-28T16:45:00Z"  # start time in UTC 
+        endTime: "2023-04-28T17:00:59Z"    # end time in UTC 
+    recurringSchedule:                     # [OPTIONAL] disable carbon awareness during specified recurring time periods 
+      - "* 23 * * 1-5"                     # disable every weekday from 11pm to 12am UTC      
 EOF
 ```
 
