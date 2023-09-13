@@ -1032,7 +1032,7 @@ spec:
 EOF
 
 # note the number of replicas that are ready
-kubectl get deploy word-processor
+kubectl get hpa -w -n sock-shop-g
 ```
 
 Finally, scale the `word-processor` app using KEDA's Redis trigger.
@@ -1074,8 +1074,7 @@ spec:
       enableTLS: "false"
       databaseIndex: "0"
 EOF
-# wait a few seconds and note the number of replicas that are ready now
-kubectl get hpa -w -n sock-shop-g
+
 ```
 
 ## Install Carbon Intensity Exporter Operator
@@ -1091,7 +1090,8 @@ cd /tmp
 git clone https://github.com/Azure/kubernetes-carbon-intensity-exporter.git
 cd kubernetes-carbon-intensity-exporter
 ```
-
+# wait a few seconds and note the number of replicas that are ready now
+kubectl get hpa -w -n sock-shop-g
 Using Helm, install the Carbon Intensity Exporter Operator into the AKS cluster.
 
 ```bash
