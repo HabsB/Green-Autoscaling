@@ -35,31 +35,12 @@ Create a resource group where Azure Cache for Redis and Azure Kubernetes Service
 ```bash
 RAND=$RANDOM
 RESOURCE_GROUP=rg-carbonaware-demo-$RAND
-LOCATION=westeurope
+LOCATION=westus
 CLUSTER_NAME=carbonaware-demo-$RAND
 
 az group create \
   --name $RESOURCE_GROUP \
   --location $LOCATION
-```
-
-Redis which will be used to store a list of random words
-
-> This service can take 15-20 minutes to provision
-
-```bash
-REDIS_NAME=carbonaware-demo-$RAND
-
-az redis create \
-  --location $LOCATION \
-  --name $REDIS_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --sku Basic \
-  --vm-size c0 \
-  --enable-non-ssl-port
-
-REDIS_HOST=$(az redis show -n $REDIS_NAME -g $RESOURCE_GROUP -o tsv --query "hostName")
-REDIS_KEY=$(az redis list-keys --name $REDIS_NAME --resource-group $RESOURCE_GROUP -o tsv --query "primaryKey")
 ```
 
 Azure Kubernetes Service is where we'll deploy and test this operator
