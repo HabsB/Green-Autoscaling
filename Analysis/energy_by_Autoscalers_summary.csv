@@ -1,0 +1,3 @@
+"Autoscaling","count","Minimum","Q1","Median","Mean","SD","Q3","Maximum"
+"Carbon_Aware_KEDA",42,3.11,3.17,5.16,7.936,6.497,13.18,29.94
+"HPA_Based",42,3.13,3.25,7.17,13.03,12.021,19.872,50.3

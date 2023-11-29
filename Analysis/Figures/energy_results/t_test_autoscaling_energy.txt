@@ -1,0 +1,12 @@
+
+	Welch Two Sample t-test
+
+data:  norm_energy by Autoscaling
+t = -2.0962, df = 156.9, p-value = 0.03767
+alternative hypothesis: true difference in means between group Carbon_Aware_KEDA and group HPA_Based is not equal to 0
+95 percent confidence interval:
+ -0.61929639 -0.01840355
+sample estimates:
+mean in group Carbon_Aware_KEDA         mean in group HPA_Based 
+                     -0.1578461                       0.1610039 
+

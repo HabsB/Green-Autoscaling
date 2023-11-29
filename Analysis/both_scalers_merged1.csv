@@ -1,0 +1,7 @@
+"Test","Autoscaling","PKG_Energy","Response_Time","Scenario"
+1," HPA_Based",174.75,693,"Read_Intensive"
+2," HPA_Based",181.03,777.75,"Read_Intensive"
+3," HPA_Based",191.5,790,"Read_Intensive"
+1," Carbon_Aware_KEDA",104.1,734.25,"Read_Intensive"
+2," Carbon_Aware_KEDA",114.23,1067.75,"Read_Intensive"
+3," Carbon_Aware_KEDA",114.99,879.75,"Read_Intensive"

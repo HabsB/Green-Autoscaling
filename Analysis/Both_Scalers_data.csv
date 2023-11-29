@@ -1,0 +1,7 @@
+"Test", "Autoscaling", "PKG_Energy", "Response_Time"
+1, HPA_Based, 174.75, 1418
+2, HPA_Based, 181.03, 1686
+3, HPA_Based, 191.5, 1781
+1, Carbon_Aware_KEDA, 104.1, 1740
+2, Carbon_Aware_KEDA, 114.23, 2721
+3, Carbon_Aware_KEDA, 114.99, 2792
