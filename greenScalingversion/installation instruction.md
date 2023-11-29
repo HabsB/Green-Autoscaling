@@ -110,7 +110,9 @@ Test your connectivity to the AKS cluster.
 ```bash
 kubectl cluster-info
 ```
+## Install KEPLER
 
+Detailed energy consumption measurement at a granular level (energy consumption per pod) using Kepler to assess the autoscaler’s impact on individual pods. the deployment detail of Kepler is provided in the following link[https://sustainable-computing.io/installation/kepler/]
 ## Install KEDA
 
 As the name suggest, KEDA is a requirement for this operator. A sample manifest is available in this repo to install KEDA v2.10.0.
